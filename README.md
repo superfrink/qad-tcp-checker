@@ -4,6 +4,7 @@ qad-tcp-checker
 Quick and dirty http server connection status checker
 
 == Background ==
+
 Nodes in some load balanced web servers were taking turns going down.  They
 were taking too long to respond to TCP connections.
 
