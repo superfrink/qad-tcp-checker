@@ -17,8 +17,8 @@ statistics.
 
 == Sample output ==
 
-  $ ./sas-monitoring
-  ./sas-monitoring is starting as pid 27925.  From another window you may run:
+  $ ./qad-tcp-checker
+  ./qad-tcp-checker is starting as pid 27925.  From another window you may run:
     kill -USR1 27925
   .................................................................................................................................................Could not create socket to 10.63.243.107 : Connection timed out
   
