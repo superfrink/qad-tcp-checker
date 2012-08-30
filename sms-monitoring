@@ -1,0 +1,80 @@
+#!/usr/bin/perl -w
+#
+# file: sas-monitoring
+# purpose: monitor sas web servers
+
+use strict;
+
+use Data::Dumper;
+use IO::Socket;
+
+my @WEB_SERVERS = qw(
+10.3.7.105
+10.3.7.106
+10.3.7.107
+10.3.7.108
+10.3.7.109
+10.3.7.62
+10.3.7.63
+10.3.7.78
+10.3.7.79
+10.3.7.60
+10.3.7.61
+);
+
+my $TIMEOUT_SECONDS = 1;
+my $SERVER_PORT     = 80;
+
+# -- main --
+
+my %connection_stats; # for tracking connection success/failure counts
+for (@WEB_SERVERS) {
+	$connection_stats{$_} = {};
+	$connection_stats{$_}{success} = 0;
+	$connection_stats{$_}{failure} = 0;
+}
+
+# GOAL : give the user a way to read connect stats via the USR1 signal.
+# DOC : this signal will interrupt the socket connect call and count as a
+#       failure
+$SIG{'USR1'} = sub {
+
+	my @ip_list = keys %connection_stats;
+
+	@ip_list = sort
+		{ $connection_stats{$b}{failure} <=> $connection_stats{$a}{failure} }
+		@ip_list;
+
+	print "\n";
+	for my $i (@ip_list) {
+		print sprintf("%16s", $i), ": failures: ",
+			$connection_stats{$i}{failure}, " successes: ",
+			$connection_stats{$i}{success}, "\n";
+	}
+};
+print $0 ," is starting as pid ", $$ ,
+	".  From another window you may run:\n  kill -USR1 ", $$, "\n";
+
+while (1) {
+	# GOAL : try to connect to the server
+	SERVER: for my $server_ip (@WEB_SERVERS) {
+		  my $sock = new IO::Socket::INET (
+                                 PeerAddr => $server_ip,
+                                 PeerPort => $SERVER_PORT,
+                                 Proto    => 'tcp',
+								 Timeout  => $TIMEOUT_SECONDS,
+							 );
+		  unless ($sock) {
+			  warn "Could not create socket to $server_ip : $!\n";
+			  $connection_stats{$server_ip}{failure} ++;
+			  next SERVER;
+		  }
+		  $connection_stats{$server_ip}{success} ++;
+		  close($sock);
+		  syswrite(STDOUT, '.', 1);
+	  }
+
+	  # wait a second then check again
+	  #syswrite(STDOUT, "\n", 1);
+	  sleep(1);
+}
