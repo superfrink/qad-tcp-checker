@@ -72,8 +72,8 @@ while (1) {
                                  PeerAddr => $server_ip,
                                  PeerPort => $SERVER_PORT,
                                  Proto    => 'tcp',
-								 Timeout  => $TIMEOUT_SECONDS,
-							 );
+                                 Timeout  => $TIMEOUT_SECONDS,
+		);
 		unless ($sock) {
 			warn "Could not create socket to $server_ip : $!\n";
 			$connection_stats{$server_ip}{failure} ++;
